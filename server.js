@@ -3,7 +3,11 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
+<<<<<<< Updated upstream
 const bcrypt = require("bcryptjs");
+=======
+const bcrypt = require('bcryptjs');
+>>>>>>> Stashed changes
 const session = require("express-session");
 require("dotenv").config();
 const db = require("./config/db");
