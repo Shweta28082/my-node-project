@@ -16,7 +16,7 @@ const {
 } = require("./config/credentials");
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
