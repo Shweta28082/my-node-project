@@ -3,7 +3,7 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 const session = require("express-session");
 require("dotenv").config();
 const db = require("./config/db");
@@ -129,7 +129,6 @@ app.post(
   profileController.createProfile
 );
 
- 
 app.use("/api/admin", adminRoutes);
 // Google OAuth Routes
 // Google OAuth routes in backend (server.js)
@@ -142,13 +141,12 @@ app.get("/auth/google/callback", async (req, res) => {
   try {
     const { tokens } = await oauth2Client.getToken(req.query.code);
     saveTokens(tokens);
-    res.redirect("https://majestic-begonia-d1d328.netlify.app/");  // Redirect to your frontend after successful authentication
+    res.redirect("https://majestic-begonia-d1d328.netlify.app/"); // Redirect to your frontend after successful authentication
   } catch (error) {
     console.error("Error during Google OAuth callback:", error);
     res.status(500).json({ message: "Authentication failed." });
   }
 });
-
 
 app.get("/auth/google/callback", async (req, res) => {
   try {
