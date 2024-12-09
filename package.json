@@ -31,7 +31,6 @@
     "nodemon": "^3.0.1"
   },
   "engines": {
-<<<<<<< Updated upstream
     "node": "18.x"
 =======
      "node": "16.x"
