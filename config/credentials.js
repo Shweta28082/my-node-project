@@ -9,7 +9,9 @@ const credentials = {
     client_id:
       "542597503461-khnhdequlg5sc09scokrdios6m1btjr7.apps.googleusercontent.com",
     client_secret: "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",
-    redirect_uris: ["http://localhost:5000/auth/google/callback"],
+    redirect_uris: [
+      "https://my-node-project-pf5g.onrender.com/auth/google/callback",
+    ],
   },
 };
 
