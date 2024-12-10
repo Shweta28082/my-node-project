@@ -42,7 +42,6 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + path.extname(file.originalname));
   },
 });
-
 const upload = multer({ storage });
 
 // Helper: Validate Email
@@ -65,10 +64,7 @@ app.post("/api/signup", async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = "INSERT INTO users (email, password) VALUES (?, ?)";
-
-    const values = [email, hashedPassword];
-
-    db.query(sql, values, (err) => {
+    db.query(sql, [email, hashedPassword], (err) => {
       if (err) {
         if (err.code === "ER_DUP_ENTRY") {
           return res.status(400).json({ message: "Email already exists." });
@@ -120,6 +116,8 @@ app.post("/api/login", (req, res) => {
     }
   });
 });
+
+// Profile API
 app.post(
   "/api/profile",
   upload.fields([
@@ -129,41 +127,34 @@ app.post(
   profileController.createProfile
 );
 
+// Admin Routes
 app.use("/api/admin", adminRoutes);
+
 // Google OAuth Routes
-// Google OAuth routes in backend (server.js)
 app.get("/auth/google", (req, res) => {
   res.redirect(getAuthUrl());
 });
 
 app.get("/auth/google/callback", async (req, res) => {
   console.log("Received callback from Google with code:", req.query.code);
-  try {
-    const { tokens } = await oauth2Client.getToken(req.query.code);
-    saveTokens(tokens);
-    res.redirect("https://majestic-begonia-d1d328.netlify.app/"); // Redirect to your frontend after successful authentication
-  } catch (error) {
-    console.error("Error during Google OAuth callback:", error);
-    res.status(500).json({ message: "Authentication failed." });
-  }
-});
 
-app.get("/auth/google/callback", async (req, res) => {
   try {
     const { code } = req.query;
     if (!code) {
       return res.status(400).json({ message: "No code received." });
     }
 
+    // Exchange code for tokens
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
+    // Fetch user info from Google
     const { data: userInfo } = await oauth2Client.request({
       url: "https://www.googleapis.com/oauth2/v2/userinfo",
     });
-
     console.log("Google User Info:", userInfo);
 
+    // Check database for user
     const sql = "SELECT * FROM users WHERE email = ?";
     db.query(sql, [userInfo.email], (err, results) => {
       if (err) {
@@ -172,21 +163,25 @@ app.get("/auth/google/callback", async (req, res) => {
       }
 
       if (results.length === 0) {
-        // Signup new user
+        // New user: Insert into database
         const insertSql =
           "INSERT INTO users (email, name, password) VALUES (?, ?, ?)";
-        const values = [userInfo.email, userInfo.name, null];
-
-        db.query(insertSql, values, (insertErr) => {
-          if (insertErr) {
-            console.error("Error inserting new user:", insertErr.message);
-            return res.status(500).json({ message: "Authentication failed." });
+        db.query(
+          insertSql,
+          [userInfo.email, userInfo.name, null],
+          (insertErr) => {
+            if (insertErr) {
+              console.error("Error inserting new user:", insertErr.message);
+              return res
+                .status(500)
+                .json({ message: "Authentication failed." });
+            }
+            req.session.user = { email: userInfo.email, name: userInfo.name };
+            res.redirect(process.env.CLIENT_URL); // Redirect to frontend
           }
-          req.session.user = { email: userInfo.email, name: userInfo.name };
-          res.redirect(process.env.CLIENT_URL);
-        });
+        );
       } else {
-        // Existing user
+        // Existing user: Login
         req.session.user = results[0];
         res.redirect(process.env.CLIENT_URL);
       }
@@ -197,7 +192,7 @@ app.get("/auth/google/callback", async (req, res) => {
   }
 });
 
-// Start the server
+// Start Server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
